@@ -1,0 +1,143 @@
+.solitaire {
+    padding: 10px;
+    background-color: darkgreen;
+    width: 500px;
+    margin: 0 auto;
+    border: gray solid 2px;
+    border-radius: 10px;
+}
+
+p {
+    display: inline;
+    margin: 0 0 0 3px;
+    color: #c71515;
+}
+
+.largeIcon {
+    align-self: center;
+    width: 24px;
+    height: 24px;
+    margin: 9px;
+}
+.smallIcon {
+    width: 12px;
+    height: 12px;
+    margin: 3px 2px;
+}
+.cardDetails {
+    display: flex;
+    justify-content: space-between;
+}
+.game {
+    height: 400px;
+    margin: 10px;
+    padding: 10px;
+    display: grid;
+    grid-template-columns: repeat(7, 1fr);
+    background-color: darkolivegreen;
+    border: darkslategrey solid 3px;
+    border-radius: 10px;
+}
+
+img {
+    -webkit-user-drag: none;
+}
+
+.column {
+    display: flex;
+    flex-direction: column; /* Reverse the order to stack cards from bottom to top */
+}
+
+.column .hiddenCard {
+    margin-bottom: -55px; /* Adjust the margin as needed to create the desired spacing */
+}
+
+.column .card:not(:last-child) {
+    margin-bottom: -55px;
+}
+
+.foundation {
+    padding: 5px 5px 0 5px;
+    background-color: #1f1f1f;
+    border-radius: 5px;
+    position: relative;
+
+}
+.stock {
+    background-color: antiquewhite;
+    border-radius: 5px;
+    padding: 5px 5px 0 5px;
+}
+
+.foundationSpot {
+    width: 50px;
+    height: 71px;
+    background-color: gray;
+    border: black solid 1px;
+    border-radius: 3px;
+    display: inline-block;
+    top: 5px;
+}
+.stockpile {
+    width: 50px;
+    height: 71px;
+    background-color: white;
+    border: black solid 1px;
+    border-radius: 3px;
+    display: inline-block;
+    margin: 0;
+}
+
+h1 {
+    text-align: center;
+}
+.hiddenCard {
+    width: 50px;
+    height: 73px;
+    border-radius: 3px;
+    margin: 0;
+}
+.card {
+    width: 44px;
+    height: 67px;
+    background-color: white;
+    border: black solid 3px;
+    border-radius: 3px;
+}
+.topContainer {
+    display: flex;
+    justify-content: space-between;
+}
+.stock {
+    align-items: end;
+    position: relative;
+}
+.stockCard {
+    width: 44px;
+    height: 67px;
+    background-color: white;
+    border: black solid 3px;
+    border-radius: 3px;
+    margin: 0;
+    position: absolute;
+    top: 5px;
+}
+
+.foundationCard {
+    width: 44px;
+    height: 67px;
+    background-color: white;
+    border: black solid 3px;
+    border-radius: 3px;
+    margin: 0;
+    position: absolute;
+    top: 5px;
+}
+
+.overlay {
+    position: fixed;
+    opacity: 0;
+    width: 230px;
+    height: 82px;
+
+}
