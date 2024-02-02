@@ -65,19 +65,44 @@ let foundation = [0, 0, 0, 0];
 let stockPile = [];
 let drawnPile = [];
 let currentColumns = initialiseColumns();
+console.log(currentColumns);
 setColumns();
+foundationSpots.forEach(function(spot, index) {
+    spot.addEventListener("click", (e) => {
+        if (selectedCard !== null) {
+
+            if (!selectedFoundation()) {
+                attemptFoundation();
+            }
+            else {
+                selectedCard = card;
+                resetColors();
+                selectedCard.style.backgroundColor = "aqua";
+            }
+        }
+        if (spot.firstChild !== null && selectedCard === null) {
+            selectedCard = spot.firstChild;
+            resetColors();
+            selectedCard.style.backgroundColor = "aqua";
+        }
+    })
+})
 
 
 function refreshEventHandlers() {
     columns.forEach(function (column, i) {
         if (column.childNodes.length === 0) {
             column.addEventListener("click", function moveKing(e) {
+                if (column.childNodes.length !== 0) {
+                    return;
+                }
                 if (selectedCard !== null) {
                     let newCard = toCard(selectedCard);
                     if (newCard.value === "K") {
                         removeCard(selectedCard);
                         addCard(i, newCard);
                         //resetColors();
+                        revealCards();
                         setColumns();
                         if (selectedStockPile()) {
                             drawnPile.pop();
@@ -85,40 +110,57 @@ function refreshEventHandlers() {
                         }
                     }
                 }
-                column.removeEventListener("click", moveKing);
+
             })
         }
-        for (let j = 0; j < currentColumns[i].length; j++) {
-            column.childNodes.forEach(function(card, j) {
-                if (currentColumns[i][j].revealed) {
-                    card.addEventListener("click", function handleClick(e) {
-                        if (selectedCard === null) {
-                            console.log("selecting first card");
-                            resetColors();
-                            selectedCard = card;
-                            card.style.backgroundColor = "aqua";
-                        } else if (toCard(selectedCard).canPlaceOn(toCard(card))) {
-                            let newCard = toCard(selectedCard);
-                            if (selectedStockPile()) {
-                                drawnPile.pop();
-                                updateStock();
+        else {
+            for (let j = 0; j < currentColumns[i].length; j++) {
+                column.childNodes.forEach(function(card, j) {
+                    if (currentColumns[i][j].revealed) {
+                        card.addEventListener("click", function handleClick(e) {
+                            if (selectedCard === null) {
+                                console.log("selecting first card");
+                                resetColors();
+                                selectedCard = card;
+                                highlightAllFrom(selectedCard)
+                                card.style.backgroundColor = "aqua";
+                            } else if (toCard(selectedCard).canPlaceOn(toCard(card))) {
+                                if (selectedBottomCard()) {
+                                    console.log("bottom selected");
+                                }
+                                let newCard = toCard(selectedCard);
+                                console.log(newCard);
+                                if (selectedStockPile()) {
+                                    drawnPile.pop();
+                                    updateStock();
+                                }
+                                if (selectedFoundation()) {
+                                    reduceFoundation(newCard.suit);
+                                    drawWholeFoundation();
+                                }
+                                removeCard(selectedCard);
+                                addCard(i, newCard);
+                                selectedCard = null;
+                                revealCards();
+                                setColumns();
+                                resetColors();
+                            } else {
+                                resetColors();
+                                selectedCard = card;
+                                card.style.backgroundColor = "aqua";
+                                if (!selectedBottomCard()) {
+                                    console.log("did not select bottom card");
+                                    highlightAllFrom(selectedCard);
+                                }
+
                             }
-                            removeCard(selectedCard);
-                            addCard(i, newCard);
-                            selectedCard = null;
-                            revealCards();
-                            setColumns();
-                            resetColors();
-                        } else {
-                            resetColors();
-                            selectedCard = card;
-                            card.style.backgroundColor = "aqua";
-                        }
-                        // Remove the event listener after it's been executed once
-                    })
-                }
-            })
+                            // Remove the event listener after it's been executed once
+                        })
+                    }
+                })
+            }
         }
+
     })
 
     if (stock.firstChild !== null) {
@@ -128,27 +170,45 @@ function refreshEventHandlers() {
             selectedCard.style.backgroundColor = "aqua";
         })
     }
-    foundationSpots.forEach(function(spot, index) {
-        spot.addEventListener("click", (e) => {
-            if (selectedCard !== null) {
-                if (selectedStockPile()) {
-                    drawnPile.pop();
-                    updateStock();
-                }
-                attemptFoundation();
-            }
-            if (spot.firstChild !== null && selectedCard === null) {
-                selectedCard = spot.firstChild;
-                selectedCard.style.backgroundColor = "aqua";
-            }
-        })
 
-
-    })
 }
 
+function highlightAllFrom(card) {
+    columns.forEach(function(column, index) {
+        let highlight = false;
+        column.childNodes.forEach(function (card, j) {
+            if (selectedCard === card) {
+                console.log("found first card to highlight");
+                highlight = true;
+            }
+            if (highlight) {
+                card.style.backgroundColor = "aqua";
+            }
+        })
+    })
+}
+function selectedBottomCard() {
+    columns.forEach(function (column, index) {
+        column.childNodes.forEach(function (card, j) {
+            if (j === column.childNodes.length-1) {
+                if (selectedCard === card) {
+                    return true;
+                }
+            }
+        });
+    });
+    return false;
+}
 function selectedStockPile() {
     return selectedCard === stock.firstChild;
+}
+function selectedFoundation() {
+    foundationSpots.forEach(function (spot) {
+        if (spot.firstChild === selectedCard)  {
+            return true;
+        }
+    })
+    return false;
 }
 function addCard(column, card) {
     card.revealed = true;
@@ -175,6 +235,7 @@ function attemptFoundation() {
     if (selectedCard === null) {
         return;
     }
+
     let value = "";
     let suit = "";
     selectedCard.firstChild.childNodes.forEach(function(info, index) {
@@ -209,6 +270,10 @@ function attemptFoundation() {
     if (suit === "spade") {
         if (foundation[0] === value1 - 1) {
             removeCard(selectedCard);
+            if (selectedStockPile()) {
+                drawnPile.pop();
+                updateStock();
+            }
             foundation[0] = value1;
             drawFoundation(new card(suit, value), selectedCard);
         }
@@ -221,7 +286,10 @@ function attemptFoundation() {
 
         if (foundation[1] === value1 - 1) {
             removeCard(selectedCard);
-
+            if (selectedStockPile()) {
+                drawnPile.pop();
+                updateStock();
+            }
             foundation[1] = value1;
             drawFoundation(new card(suit, value), selectedCard);
         }
@@ -234,7 +302,10 @@ function attemptFoundation() {
 
         if (foundation[2] === value1 - 1) {
             removeCard(selectedCard);
-
+            if (selectedStockPile()) {
+                drawnPile.pop();
+                updateStock();
+            }
             foundation[2] = value1;
             drawFoundation(new card(suit, value), selectedCard);
         }
@@ -247,7 +318,10 @@ function attemptFoundation() {
 
         if (foundation[3] === value1 - 1) {
             removeCard(selectedCard);
-
+            if (selectedStockPile()) {
+                drawnPile.pop();
+                updateStock();
+            }
             foundation[3] = value1;
             drawFoundation(new card(suit, value), selectedCard);
         }
@@ -256,10 +330,11 @@ function attemptFoundation() {
             resetColors();
         }
     }
-    resetColors();
     selectedCard = null;
     revealCards();
     setColumns();
+    resetColors();
+
     refreshEventHandlers();
 }
 function removeCard(card) {
@@ -319,6 +394,100 @@ function drawFoundation(card, vcard) {
     }
 
 }
+
+function drawWholeFoundation() {
+    foundationSpots.forEach(function(spot, index) {
+        removeAllChildNodes(spot);
+        let suit = ""
+        if (index === 0) {
+            suit = "spade"
+        }
+        if (index === 1) {
+            suit = "heart"
+        }
+        if (index === 2) {
+            suit = "diamond"
+        }
+        if (index === 3) {
+            suit = "club"
+        }
+        spot.appendChild(returnVisualCard(suit, foundation[index]));
+    })
+}
+function returnVisualCard(suit, value) {
+    let cardDetails = document.createElement("div");
+    cardDetails.className = "cardDetails";
+    let cardText = document.createElement("p");
+    let smallIcon = document.createElement("img");
+    smallIcon.className = "smallIcon";
+    let largeIcon = document.createElement("img");
+    largeIcon.className = "largeIcon";
+    if (value === 1) {
+        cardText.textContent = "A";
+    }
+    else if (value === 11) {
+        cardText.textContent = "J";
+    }
+    else if (value === 12) {
+        cardText.textContent = "Q";
+    }
+    else if (value === 13) {
+        cardText.textContent = "K";
+    }
+    else {
+        cardText.textContent = value.toString();
+    }
+    if (suit === "spade") {
+        cardText.style.color = "black";
+        smallIcon.src = "icons/spade.png";
+        largeIcon.src = "icons/spade.png";
+    }
+    if (suit === "heart") {
+        cardText.style.color = "#c71515";
+        smallIcon.src = "icons/heart.png";
+        largeIcon.src = "icons/heart.png";
+    }
+    if (suit === "diamond") {
+        cardText.style.color = "#c71515";
+        smallIcon.src = "icons/diamond.png";
+        largeIcon.src = "icons/diamond.png";
+    }
+    if (suit === "club") {
+        cardText.style.color = "black";
+        smallIcon.src = "icons/club.png";
+        largeIcon.src = "icons/club.png";
+    }
+    cardDetails.appendChild(cardText);
+    cardDetails.appendChild(smallIcon);
+    let card = document.createElement("div");
+    card.className = "card";
+    card.appendChild(cardDetails);
+    card.appendChild(largeIcon);
+    return card;
+}
+function reduceFoundation(suit) {
+    if (suit === "spade") {
+        if (foundation[0] !== 0) {
+            foundation[0] -= 1;
+        }
+    }
+    if (suit === "heart") {
+        if (foundation[1] !== 0) {
+            foundation[1] -= 1;
+        }
+    }
+    if (suit === "diamond") {
+        if (foundation[2] !== 0) {
+            foundation[2] -= 1;
+        }
+    }
+    if (suit === "club") {
+        if (foundation[3] !== 0) {
+            foundation[3] -= 1;
+        }
+    }
+}
+
 function revealCards() {
     for (let i = 0; i < currentColumns.length; i++) {
         for (let j = 0; j < currentColumns[i].length; j++) {
@@ -450,6 +619,7 @@ function drawFromStock() {
 }
 function startGame() {
     foundation = [0, 0, 0, 0];
+    hiddenCardSymbol.style.opacity = 1;
     clearFoundation();
     clearColumns();
     removeAllChildNodes(stock);
