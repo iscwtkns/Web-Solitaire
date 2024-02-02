@@ -134,10 +134,3 @@ h1 {
     top: 5px;
 }
 
-.overlay {
-    position: fixed;
-    opacity: 0;
-    width: 230px;
-    height: 82px;
-
-}
