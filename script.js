@@ -64,6 +64,11 @@ foundationSpots.forEach(function(spot, index) {
             if (!selectedFoundation()) {
                 attemptFoundation();
             }
+            else if (selectedStockPile()) {
+                drawnPile.pop();
+                updateStock();
+                removeCard(toCard(selectedCard));
+            }
             else {
                 selectedCard = spot.firstChild;
                 resetColors();
@@ -90,16 +95,28 @@ function refreshEventHandlers() {
                 if (selectedCard !== null) {
                     let newCard = toCard(selectedCard);
                     if (newCard.value === "K") {
-                        removeCard(toCard(selectedCard));
-                        addCard(i, newCard);
+                        if (selectedBottomCard()) {
+                            console.log("king is bottom card");
+                            removeCard(toCard(selectedCard));
+                            addCard(i, newCard);
+                        }
+                        else if (selectedStockPile()) {
+                            drawnPile.pop();
+                            updateStock();
+                            removeCard(toCard(selectedCard));
+                            addCard(i, newCard);
+                        }
+                        else {
+                            console.log(currentColumns);
+                            moveAllFrom(i, selectedCard)
+                            console.log(currentColumns);
+                        }
+
                         //resetColors();
                         revealCards();
                         setColumns();
-                        if (selectedStockPile()) {
-                            drawnPile.pop();
-                            updateStock();
-                        }
                     }
+
                 }
 
             })
@@ -117,7 +134,6 @@ function refreshEventHandlers() {
                             } else if (toCard(selectedCard).canPlaceOn(toCard(card))) {
                                 let newCard = toCard(selectedCard);
 
-                                console.log(selectedBottomCard());
                                 if (selectedBottomCard()) {
                                     removeCard(toCard(selectedCard));
                                     addCard(i, newCard);
@@ -168,16 +184,25 @@ function refreshEventHandlers() {
     }
 
 }
-function moveAllFrom(columnToAdd, card) {
+function moveAllFrom(columnToAdd, card2) {
     columns.forEach(function(column, index) {
         let correctColumn = false;
         column.childNodes.forEach(function(card, j) {
-            if (toCard(card) === card) {
-                correctColumn = true;
+
+            if (card.className !== "hiddenCard") {
+                console.log("visual card", toCard(card));
+                console.log(card2);
+                if (card === card2) {
+                    correctColumn = true;
+                    console.log("found first card in stack to move");
+                }
             }
+
             if (correctColumn) {
-                currentColumns[index].splice(j, 1);
-                addCard(columnToAdd, card);
+                removeCard(toCard(card));
+                addCard(columnToAdd, toCard(card));
+
+                console.log("moving card");
             }
         })
     })
