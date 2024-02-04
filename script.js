@@ -49,6 +49,7 @@ class card {
 const deck = initialiseDeck();
 const columns = document.querySelectorAll(".column");
 const foundationSpots = document.querySelectorAll(".foundationSpot");
+const foundationBox = document.querySelector(".foundation");
 const stock = document.querySelector(".stockpile");
 const hiddenCardSymbol = document.querySelector(".hiddenCard");
 let selectedCard = null;
@@ -57,6 +58,18 @@ let stockPile = [];
 let drawnPile = [];
 let currentColumns = initialiseColumns();
 setColumns();
+
+foundationBox.addEventListener("click", (e) => {
+    if (selectedCard !== null) {
+        if (!selectedFoundation()) {
+            attemptFoundation();
+        }
+        if (selectedStockPile()) {
+            drawnPile.pop();
+            updateStock();
+        }
+    }
+})
 foundationSpots.forEach(function(spot, index) {
     spot.addEventListener("click", (e) => {
         if (selectedCard !== null) {
@@ -64,10 +77,9 @@ foundationSpots.forEach(function(spot, index) {
             if (!selectedFoundation()) {
                 attemptFoundation();
             }
-            else if (selectedStockPile()) {
+            if (selectedStockPile()) {
                 drawnPile.pop();
                 updateStock();
-                removeCard(toCard(selectedCard));
             }
             else {
                 selectedCard = spot.firstChild;
