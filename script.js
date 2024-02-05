@@ -59,56 +59,65 @@ let drawnPile = [];
 let currentColumns = initialiseColumns();
 setColumns();
 
-foundationBox.addEventListener("click", (e) => {
-    if (selectedCard !== null) {
-        if (!selectedFoundation()) {
-            attemptFoundation();
-        }
-        if (selectedStockPile()) {
-            drawnPile.pop();
-            updateStock();
-        }
+document.addEventListener("click", (e) => {
+    if (e.target.className !== "card" && e.target.className !== "hiddenCard" && e.target.className !== "foundationCard" && e.target.className !== "stockpile" && e.target.className !== "largeIcon" && e.target.className !== "smallIcon" && e.target.className !== "cardDetails" && e.target.tagName !== "P" && e.target.className !== "stockCard") {
+        selectedCard = null;
+        resetColors();
+    }
+})
+stock.addEventListener("click", (e) => {
+    if (stock.firstChild !== null) {
+        resetColors();
+        selectedCard = stock.firstChild;
+        selectedCard.style.backgroundColor = "aqua";
     }
 })
 foundationSpots.forEach(function(spot, index) {
     spot.addEventListener("click", (e) => {
         if (selectedCard !== null) {
-
             if (!selectedFoundation()) {
-                attemptFoundation();
+                const foundationBefore = [...foundation];
+                if (selectedBottomCard() || selectedStockPile()) {
+                    attemptFoundation();
+                }
+                if (foundationBefore.every((value, idx) => value === foundation[idx])) {
+                    // If the foundation has not been updated, the card was not moved
+                    selectedCard = spot.firstChild;
+                    resetColors();
+                    selectedCard.style.backgroundColor = "aqua";
+                } else {
+                    // If the foundation has been updated, the card was successfully moved
+                    selectedCard = null;
+                }
+            }
+            else {
+                selectedCard = spot.firstChild;
+                resetColors();
+                selectedCard.style.backgroundColor = "aqua";
             }
             if (selectedStockPile()) {
                 drawnPile.pop();
                 updateStock();
             }
-            else {
-                selectedCard = spot.firstChild;
-                resetColors();
-                console.log(selectedCard);
-                selectedCard.style.backgroundColor = "aqua";
-            }
         }
-        if (spot.firstChild !== null && selectedCard === null) {
+        else if (spot.firstChild !== null) {
             selectedCard = spot.firstChild;
             resetColors();
             selectedCard.style.backgroundColor = "aqua";
         }
     })
 })
+function initialiseEventHandlers() {
 
 
-function refreshEventHandlers() {
+
     columns.forEach(function (column, i) {
-        if (column.childNodes.length === 0) {
-            column.addEventListener("click", function moveKing(e) {
-                if (column.childNodes.length !== 0) {
-                    return;
-                }
+        column.addEventListener("click", (e) => {
+            if (column.childNodes.length === 0) {
                 if (selectedCard !== null) {
                     let newCard = toCard(selectedCard);
                     if (newCard.value === "K") {
                         if (selectedBottomCard()) {
-                            console.log("king is bottom card");
                             removeCard(toCard(selectedCard));
                             addCard(i, newCard);
                         }
@@ -119,9 +128,7 @@ function refreshEventHandlers() {
                             addCard(i, newCard);
                         }
                         else {
-                            console.log(currentColumns);
                             moveAllFrom(i, selectedCard)
-                            console.log(currentColumns);
                         }
 
                         //resetColors();
@@ -130,69 +137,103 @@ function refreshEventHandlers() {
                     }
 
                 }
+            }
+            else {
+                if (e.target !== column) {
+                    if (e.target.className  !== "hiddenCard") {
+                        let card = "";
+                        if (e.target.className === "card") {
+                            card = e.target;
+                        }
+                        if (e.target.className === "largeIcon" || e.target.className === "cardDetails") {
+                            card = e.target.parentNode;
+                        }
+                        if (e.target.className === "smallIcon" || e.target.nodeName === "P") {
+                            card = e.target.parentNode.parentNode;
+                        }
+                        if (selectedCard === null) {
+                            resetColors();
+                            selectedCard = card;
+                            highlightAllFrom(selectedCard)
+                            selectedCard.style.backgroundColor = "aqua";
+                        } else if (toCard(selectedCard).canPlaceOn(toCard(card))) {
+                            let newCard = toCard(selectedCard);
 
-            })
-        }
-        else {
-            for (let j = 0; j < currentColumns[i].length; j++) {
-                column.childNodes.forEach(function(card, j) {
-                    if (currentColumns[i][j].revealed) {
-                        card.addEventListener("click", function handleClick(e) {
-                            if (selectedCard === null) {
-                                resetColors();
-                                selectedCard = card;
-                                highlightAllFrom(selectedCard)
-                                card.style.backgroundColor = "aqua";
-                            } else if (toCard(selectedCard).canPlaceOn(toCard(card))) {
-                                let newCard = toCard(selectedCard);
+                            if (selectedBottomCard()) {
+                                removeCard(toCard(selectedCard));
+                                addCard(i, newCard);
+                            }
+                            else if (selectedStockPile()) {
+                                drawnPile.pop();
+                                updateStock();
+                                removeCard(toCard(selectedCard));
+                                addCard(i, newCard);
+                            }
+                            else if (selectedFoundation()) {
 
-                                if (selectedBottomCard()) {
-                                    removeCard(toCard(selectedCard));
-                                    addCard(i, newCard);
-                                }
-                                else if (selectedStockPile()) {
-                                    drawnPile.pop();
-                                    updateStock();
-                                    removeCard(toCard(selectedCard));
-                                    addCard(i, newCard);
-                                }
-                                else if (selectedFoundation()) {
-                                    reduceFoundation(newCard.suit);
-                                    drawWholeFoundation();
-                                    removeCard(toCard(selectedCard));
-                                    addCard(i, newCard);
-                                }
-                                else {
-                                    moveAllFrom(i, selectedCard);
-                                }
-                                selectedCard = null;
-                                revealCards();
-                                setColumns();
-                                resetColors();
-                            } else {
-                                resetColors();
-                                selectedCard = card;
-                                card.style.backgroundColor = "aqua";
-                                if (!selectedBottomCard()) {
-                                    highlightAllFrom(selectedCard);
-                                }
+                                reduceFoundation(newCard.suit);
+
+                                drawWholeFoundation();
+
+                                removeCard(toCard(selectedCard));
+
+                                addCard(i, newCard);
 
                             }
-                            // Remove the event listener after it's been executed once
-                        })
+                            else {
+                                moveAllFrom(i, selectedCard);
+                            }
+                            selectedCard = null;
+                            revealCards();
+                            setColumns();
+                            resetColors();
+                        } else {
+                            resetColors();
+                            selectedCard = card;
+                            card.style.backgroundColor = "aqua";
+                            if (!selectedBottomCard()) {
+                                highlightAllFrom(selectedCard);
+                            }
+
+                        }
+
                     }
-                })
+                }
             }
-        }
+        })
 
     })
 
-    if (stock.firstChild !== null) {
-        stock.firstChild.addEventListener("click", (e) => {
-            resetColors();
-            selectedCard = stock.firstChild;
-            selectedCard.style.backgroundColor = "aqua";
-        })
+}
+function inFoundation(card) {
+    if (card.suit === "spade") {
+        return foundation[0] >= convertToIntValue(card.value);
+    }
+    if (card.suit === "heart") {
+        return foundation[1] >= convertToIntValue(card.value);
+    }
+    if (card.suit === "diamond") {
+        return foundation[2] >= convertToIntValue(card.value);
+    }
+    if (card.suit === "club") {
+        return foundation[3] >= convertToIntValue(card.value);
+    }
+}
+function convertToIntValue(value) {
+    if (value === "A") {
+        return 1;
+    }
+    if (value === "K") {
+        return 13;
+    }
+    if (value === "Q") {
+        return 12;
+    }
+    if (value === "J") {
+        return 11;
+    }
+    else {
+        return parseInt(value);
     }
 
 }
@@ -202,11 +243,8 @@ function moveAllFrom(columnToAdd, card2) {
         column.childNodes.forEach(function(card, j) {
 
             if (card.className !== "hiddenCard") {
-                console.log("visual card", toCard(card));
-                console.log(card2);
                 if (card === card2) {
                     correctColumn = true;
-                    console.log("found first card in stack to move");
                 }
             }
 
@@ -214,7 +252,6 @@ function moveAllFrom(columnToAdd, card2) {
                 removeCard(toCard(card));
                 addCard(columnToAdd, toCard(card));
 
-                console.log("moving card");
             }
         })
     })
@@ -277,10 +314,13 @@ function toCard(vcard) {
     return card1;
 }
 function attemptFoundation() {
+
+
+
+
     if (selectedCard === null) {
         return;
     }
-
     let value = "";
     let suit = "";
     selectedCard.firstChild.childNodes.forEach(function(info, index) {
@@ -321,10 +361,13 @@ function attemptFoundation() {
             }
             foundation[0] = value1;
             drawFoundation(new card(suit, value), selectedCard);
-        }
-        else {
-            selectedCard = null;
             resetColors();
+
+        }
+        else if (foundation[0] > 0) {
+            selectedCard = foundationSpots.item(0).firstChild;
+            resetColors();
+            selectedCard.style.backgroundColor = "aqua";
         }
     }
     if (suit === "heart") {
@@ -337,10 +380,13 @@ function attemptFoundation() {
             }
             foundation[1] = value1;
             drawFoundation(new card(suit, value), selectedCard);
-        }
-        else {
-            selectedCard = null;
             resetColors();
+
+        }
+        else if (foundation[1] > 0) {
+            selectedCard = foundationSpots.item(1).firstChild;
+            resetColors();
+            selectedCard.style.backgroundColor = "aqua";
         }
     }
     if (suit === "diamond") {
@@ -353,10 +399,13 @@ function attemptFoundation() {
             }
             foundation[2] = value1;
             drawFoundation(new card(suit, value), selectedCard);
-        }
-        else {
-            selectedCard = null;
             resetColors();
+
+        }
+        else if (foundation[2] > 0) {
+            selectedCard = foundationSpots.item(2).firstChild;
+            resetColors();
+            selectedCard.style.backgroundColor = "aqua";
         }
     }
     if (suit === "club") {
@@ -369,18 +418,17 @@ function attemptFoundation() {
             }
             foundation[3] = value1;
             drawFoundation(new card(suit, value), selectedCard);
-        }
-        else {
-            selectedCard = null;
             resetColors();
         }
+        else if (foundation[3] > 0) {
+            selectedCard = foundationSpots.item(3).firstChild;
+            resetColors();
+            selectedCard.style.backgroundColor = "aqua";
+        }
     }
-    selectedCard = null;
     revealCards();
     setColumns();
-    resetColors();
 
-    refreshEventHandlers();
 }
 function removeCard(card) {
 
@@ -449,7 +497,8 @@ function drawWholeFoundation() {
         if (foundation[index] > 0)  {
             let newCard = returnVisualCard(suit, foundation[index]);
             newCard.className = "foundationCard"
-            spot.appendChild(returnVisualCard(suit, foundation[index]));
+
+            spot.appendChild(newCard);
         }
     })
 }
@@ -650,7 +699,6 @@ function drawFromStock() {
     if (stockPile.length === 0) {
         hiddenCardSymbol.style.opacity = 0;
     }
-    refreshEventHandlers();
 }
 function startGame() {
     foundation = [0, 0, 0, 0];
@@ -676,7 +724,7 @@ function startGame() {
     }
     setColumns();
     setStockPile(gameDeck, counter);
-    refreshEventHandlers()
+    initialiseEventHandlers()
 
 }
 function setStockPile(deck, cutoff) {
@@ -746,7 +794,6 @@ function setColumns() {
             }
         }
     })
-    refreshEventHandlers();
 }
 function removeAllChildNodes(parent) {
     while (parent.firstChild) {
