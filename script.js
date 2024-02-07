@@ -52,7 +52,9 @@ const foundationSpots = document.querySelectorAll(".foundationSpot");
 const foundationBox = document.querySelector(".foundation");
 const stock = document.querySelector(".stockpile");
 const hiddenCardSymbol = document.querySelector(".hiddenCard");
+const moveCounter = document.querySelector(".moveCounter");
 let selectedCard = null;
+let moves = 0;
 let foundation = [0, 0, 0, 0];
 let stockPile = [];
 let drawnPile = [];
@@ -87,7 +89,9 @@ foundationSpots.forEach(function(spot, index) {
                     selectedCard.style.backgroundColor = "aqua";
                 } else {
                     // If the foundation has been updated, the card was successfully moved
+                    moves += 1;
                     selectedCard = null;
+                    setColumns();
                 }
             }
             else {
@@ -108,15 +112,13 @@ foundationSpots.forEach(function(spot, index) {
     })
 })
 function initialiseEventHandlers() {
-
-
-
     columns.forEach(function (column, i) {
         column.addEventListener("click", (e) => {
             if (column.childNodes.length === 0) {
                 if (selectedCard !== null) {
                     let newCard = toCard(selectedCard);
                     if (newCard.value === "K") {
+                        moves += 1;
                         if (selectedBottomCard()) {
                             removeCard(toCard(selectedCard));
                             addCard(i, newCard);
@@ -158,7 +160,7 @@ function initialiseEventHandlers() {
                             selectedCard.style.backgroundColor = "aqua";
                         } else if (toCard(selectedCard).canPlaceOn(toCard(card))) {
                             let newCard = toCard(selectedCard);
-
+                            moves += 1;
                             if (selectedBottomCard()) {
                                 removeCard(toCard(selectedCard));
                                 addCard(i, newCard);
@@ -657,6 +659,8 @@ function drawFromStock() {
         hiddenCardSymbol.style.opacity = 1;
     }
     else {
+        moves += 1;
+        setColumns();
         const card = stockPile.splice(0,1);
         drawnPile.push(card[0]);
         let cardDetails = document.createElement("div");
@@ -702,6 +706,7 @@ function drawFromStock() {
 }
 function startGame() {
     foundation = [0, 0, 0, 0];
+    moves = 0;
     hiddenCardSymbol.style.opacity = 1;
     clearFoundation();
     clearColumns();
@@ -794,6 +799,7 @@ function setColumns() {
             }
         }
     })
+    moveCounter.textContent = "Moves: " + moves;
 }
 function removeAllChildNodes(parent) {
     while (parent.firstChild) {
